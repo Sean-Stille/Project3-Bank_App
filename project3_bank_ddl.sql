@@ -101,3 +101,8 @@ INSERT INTO Account (cust_name, bank_name, type, balance, interest_rate) VALUES
   ('Fred Flintstone', 'Oshkosh20th', 'checking', 10000.0000, NULL),
   ('Fred Flintstone', 'Oshkosh20th', 'savings', 5000000.0000, 1.4),
   ('Bill Jones', 'Neenah', 'savings', 10000.0000, 2.0);
+
+
+
+
+SELECT transaction_timestamp, description, amount FROM AccountTransaction WHERE acc_num = 6 AND transaction_timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY);

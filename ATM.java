@@ -18,6 +18,7 @@ public class ATM{
                 if (pin == SQL_calls.getPINByAccount(accountNum) ){
                     System.out.println("Login Successful\n");
                     loggedIn(accountNum);
+                    valid = true;
                 }
                 else{
                     System.out.println("Invalid PIN");
@@ -27,12 +28,7 @@ public class ATM{
                 System.out.println("Invalid Account Number"); //This might not be the best way from a security standpoint
              }
             
-        }
-        
-
-        //SQL_calls.callSQL("SELECT acc_num, pin from Account ac INNER JOIN BankCustomer bc on ac.cust_name = bc.cust_name;");
-        
-          
+        }      
     }
 
     public static void loggedIn(int acc_num){
@@ -45,27 +41,28 @@ public class ATM{
                 System.out.println();
                 switch(intake){
                     case 1:
-                        //Show balance
-                        //probably can just call the SQL straight from here
+                        Double balance = SQL_calls.getAccountBalanceByAccount(acc_num);
+                        System.out.println("Account Balance: " + balance + "\n");
                         break;
                     case 2:
-                        //show 30 day transactions/balance list
-                        //probably can just call the SQL straight from here
+                        String result = SQL_calls.getHistory(acc_num);
+                        System.out.println(result);
                         break;
                     case 3:
-                        withdraw();
+                        withdraw(acc_num);
                         break;
                     case 4:
-                        deposit();
+                        deposit(acc_num);
                         break;
                     case 5:
-                        changePin();
+                        changePin(acc_num);
                         break;
                     default:
                         break;
                 }
             }
             catch(Exception e){
+                e.printStackTrace();
                 System.out.println("Please enter a valid input");
                 intake = -1;
             }
@@ -73,8 +70,9 @@ public class ATM{
         }
     }
 
-    public static void changePin(){
+    public static void changePin(int acc_num){
         int intake = changePinHelper();
+        SQL_calls.updatePIN(acc_num, intake);
         //call SQL
     }
 
@@ -93,9 +91,10 @@ public class ATM{
         //change PIN SQL call
     }
 
-    public static void deposit(){
+    public static void deposit(int acc_num){
         System.out.print("Please enter the amount to deposit: ");
         double intake = InputReaders.getDoubleInput(0, Double.MAX_VALUE);
+        SQL_calls.depositToAccount(acc_num, intake);
         //run SQL to deposit
     }
 
@@ -105,9 +104,9 @@ public class ATM{
         return intake;
     }
 
-    public static void withdraw(){
+    public static void withdraw(int acc_num){
         int intake = -1;
-        double withdrawel;
+        double withdrawel = 0;
         System.out.println("1   $20\n2   $40\n3   $60\n4   $100\n5   $150\n6   OTHER");
         System.out.print("Input: ");
         intake = InputReaders.getInput(1,6);
@@ -133,6 +132,14 @@ public class ATM{
             default:
                 break;
         }     
+        Double balance = SQL_calls.getAccountBalanceByAccount(acc_num);
+        if(balance > withdrawel){
+            SQL_calls.withdrawFromAccount(acc_num, withdrawel);
+            System.out.println("Here is your " + withdrawel + " dollars.\n");
+        }
+        else{
+            System.out.println("Not enough money to complete withdrawel!\n");
+        }
             //call SQL to find out balance and check if withdrawel is over balance  
             //call SQL function to withdraw if valid
     }
