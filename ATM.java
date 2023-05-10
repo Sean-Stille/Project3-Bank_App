@@ -1,15 +1,47 @@
 import java.io.*;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 public class ATM{
     public static void main(String[] args){
-        int x;
+        int accountNum = -1;
+        int pin = -1;
+        boolean valid = false;
+        ArrayList<Integer> accounts = SQL_calls.getAccountNums();
+
+        while(!valid){
+            System.out.print("Enter Account Number: ");
+            accountNum = InputReaders.getInput(0, Integer.MAX_VALUE);
+            if (accounts.contains(accountNum)){
+                System.out.print("Please enter PIN: ");
+                pin = InputReaders.getPINInput(0, 9999);
+                if (pin == SQL_calls.getPINByAccount(accountNum) ){
+                    System.out.println("Login Successful\n");
+                    loggedIn(accountNum);
+                }
+                else{
+                    System.out.println("Invalid PIN");
+                }
+            }
+            else{
+                System.out.println("Invalid Account Number"); //This might not be the best way from a security standpoint
+             }
+            
+        }
+        
+
+        //SQL_calls.callSQL("SELECT acc_num, pin from Account ac INNER JOIN BankCustomer bc on ac.cust_name = bc.cust_name;");
+        
+          
+    }
+
+    public static void loggedIn(int acc_num){
         int intake = -1;
         while(intake != 6){
             try{
                 System.out.println("1.  Balance Inquiry \n2.  Mini Statement\n3.  Cash Withdrawal \n4.  Deposit\n5.  PIN Change\n6.  Quit");
                 System.out.print("Input: ");
-                intake = getInput(1,6);
+                intake = InputReaders.getInput(1,6);
                 System.out.println();
                 switch(intake){
                     case 1:
@@ -39,40 +71,6 @@ public class ATM{
             }
                
         }
-          
-    }
-
-    public static boolean callSQL(String query){
-        String db = Login.DB;
-        String user = Login.USER;
-        String password = Login.PASSWORD;
-        String url = Login.URL;
-        boolean queryWorked = false;
-        // create a connection to the database using try-with-resources (auto-closes resources in try() parentheses)
-        System.out.println("Attempting connection");
-        try (
-            Connection conn = DriverManager.getConnection(url + db, user, password);
-            Statement stmt = conn.createStatement();
-        ) {
-            System.out.println("Connection successful ");
-            queryWorked = stmt.execute(query);
-            ResultSet results = stmt.getResultSet();
-            System.out.println("Results:");
-            while (results.next()) { // next positions me at the next tuple/row
-                String name = results.getString("patron"); // can pass String attribute name
-                //String name = results.getString(1); // or can pass int position in tuple, 1-based (not zero-based)
-
-                int age = results.getInt("age"); // can get age as an int or a String
-                //String age = results.getString("age");
-
-                System.out.println(" Name = " + name + ", Age = " + age);
-            }
-            // stmt.close(); // done for you with try-with-resources construct
-            // conn.close(); // done for you with try-with-resources construct
-        } catch (SQLException e) {
-            System.out.println("SQL Error " + e.getMessage());
-        }
-        return false;
     }
 
     public static void changePin(){
@@ -82,9 +80,9 @@ public class ATM{
 
     public static int changePinHelper(){
         System.out.print("Enter new PIN: ");
-        int intake = getPINInput(0, 9999);
+        int intake = InputReaders.getPINInput(0, 9999);
         System.out.print("Confirm new PIN: ");
-        int intake2 = getPINInput(0, 9999);
+        int intake2 = InputReaders.getPINInput(0, 9999);
         if(intake == intake2){
             return intake;
         }
@@ -97,13 +95,13 @@ public class ATM{
 
     public static void deposit(){
         System.out.print("Please enter the amount to deposit: ");
-        double intake = getDoubleInput(0, Double.MAX_VALUE);
+        double intake = InputReaders.getDoubleInput(0, Double.MAX_VALUE);
         //run SQL to deposit
     }
 
     public static double OtherWithdraw(){
         System.out.print("Please enter withdrawel amount: ");
-        double intake = getDoubleInput(0, Double.MAX_VALUE);
+        double intake = InputReaders.getDoubleInput(0, Double.MAX_VALUE);
         return intake;
     }
 
@@ -112,7 +110,7 @@ public class ATM{
         double withdrawel;
         System.out.println("1   $20\n2   $40\n3   $60\n4   $100\n5   $150\n6   OTHER");
         System.out.print("Input: ");
-        intake = getInput(1,6);
+        intake = InputReaders.getInput(1,6);
         switch(intake){
             case 1:
                 withdrawel = 20;
@@ -139,79 +137,5 @@ public class ATM{
             //call SQL function to withdraw if valid
     }
 
-    public static int getInput(int min, int max){
-        Scanner scan = new Scanner(System.in);
-        int input = -1;
-        String inputString = "";
-        boolean valid = false;
-        while(!valid){
-            try{
-                
-                inputString = scan.nextLine();
-                input = Integer.parseInt(inputString);
-                if(input <= max && input >= min){
-                    return input;
-                }
-                else{
-                    throw new Exception();
-                }
-            }
-            catch(Exception e){
-                System.out.println("Please enter a valid input");
-            }
-            
-        }
-        return -1;
-    }
-
-    public static int getPINInput(int min, int max){
-        Scanner scan = new Scanner(System.in);
-        int input = -1;
-        String inputString = "";
-        boolean valid = false;
-        while(!valid){
-            try{
-                inputString = scan.nextLine();
-                if(inputString.length() != 4){
-                    throw new Exception();
-                }
-                input = Integer.parseInt(inputString);
-                if(input <= max && input >= min){
-                    return input;
-                }
-                else{
-                    throw new Exception();
-                }
-            }
-            catch(Exception e){
-                System.out.println("Please enter a valid input");
-            }
-            
-        }
-        return -1;
-    }
-
-    public static double getDoubleInput(double min, double max){
-        Scanner scan = new Scanner(System.in);
-        double input = -1;
-        String inputString = "";
-        boolean valid = false;
-        while(!valid){
-            try{
-                inputString = scan.nextLine();
-                input = Double.parseDouble(inputString);
-                if(input <= max && input >= min){
-                    return input;
-                }
-                else{
-                    throw new Exception();
-                }
-            }
-            catch(Exception e){
-                System.out.println("Please enter a valid input");
-            }
-            
-        }
-        return -1;
-    }
+    
 }
